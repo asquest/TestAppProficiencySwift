@@ -1,0 +1,6 @@
+framework module Pods_TestAppProficiency {
+  umbrella header "Pods-TestAppProficiency-umbrella.h"
+
+  export *
+  module * { export * }
+}
