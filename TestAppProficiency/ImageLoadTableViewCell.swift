@@ -60,6 +60,7 @@ class ImageLoadTableViewCell: UITableViewCell {
         
         let k = NSLayoutConstraint(item: imageContent, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 50)
         let l = NSLayoutConstraint(item: imageContent, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 50)
+        
         NSLayoutConstraint.activate([a,b,d,e,f,g,h,i,j,k,l])
 //        NSLayoutConstraint.activate([a,b,c,d])
 

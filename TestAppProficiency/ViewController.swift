@@ -11,8 +11,8 @@ import UIKit
 class ViewController: UIViewController {
 
     var tableview: UITableView = UITableView()
-    var tableData: [Data] = []
-    
+    var tableData: [Model] = []
+    private var imageCache = NSCache<NSString, UIImage>()
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -31,11 +31,14 @@ class ViewController: UIViewController {
     }
     
     func fetchData() {
-        Request.fetchData.execute { [weak self] (response, data: DataModel) in
+        imageCache.removeAllObjects()
+        Request.fetchData.execute(success: { [weak self] (response, data: DataModel) in
             self?.navigationItem.title = data.title ?? ""
             self?.tableData = data.data ?? []
             self?.tableview.reloadData()
-        }
+        }, failure: { (error) in
+            print(error)
+        })
     }
     
     func setup() {
@@ -48,20 +51,39 @@ class ViewController: UIViewController {
 }
 
 extension ViewController: UITableViewDelegate, UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return tableData.count
-    }
-    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "imageDetailCell") as! ImageLoadTableViewCell
-        cell.imageContent.image = .checkmark
+        if let image = imageCache.object(forKey: NSString(string: "\(indexPath.row)")) {
+            cell.imageContent.image = image
+        } else {
+            cell.imageContent.setImage(url: tableData[indexPath.row].image) { [weak self] (image) in
+                self?.imageCache.setObject(image, forKey: NSString(string: "\(indexPath.row)"))
+            }
+        }
+        
         cell.titleLabel.text = tableData[indexPath.row].title
         cell.descLabel.text = tableData[indexPath.row].desc
         return cell
     }
     
-    
-    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return tableData.count
+    }
 }
 
+extension UIImageView {
+    typealias ImageCompletion = (_ image: UIImage) -> Void
+    func setImage(url: String?, completion: @escaping ImageCompletion) {
+        image = .checkmark
+        guard let url = url else { return }
+        Request.fetchImage(url: url).execute(success: { [weak self] (response, data) in
+            guard let image = UIImage(data: data) else { return }
+            self?.image = image
+            completion(image)
+        }, failure: { (error) in
+            print(error)
+            return
+        })
+    }
+}
 
